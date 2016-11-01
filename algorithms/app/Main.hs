@@ -1,6 +1,10 @@
 module Main where
 
-import Lib
+import ArrayInversion
 
 main :: IO ()
-main = undefined
+main = do
+    lines <- lines <$> readFile "data/ArrayInversions.txt"
+    let ns = read <$> lines :: [Int]
+    print $ countInversions ns
+
