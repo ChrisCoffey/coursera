@@ -1,10 +1,10 @@
 module Main where
 
-import ArrayInversion
+import QuicksortCounting
 
 main :: IO ()
 main = do
-    lines <- lines <$> readFile "data/ArrayInversions.txt"
+    lines <- lines <$> readFile "data/QuicksortCounting.txt"
     let ns = read <$> lines :: [Int]
-    print $ countInversions ns
+    print $ quicksort' ns
 

@@ -1,8 +1,6 @@
 module ArrayInversion (
     countInversions,
-    merge,
-    mergesort,
-    SortedList(..)
+    merge
 ) where
 
 type ListCount = ([Int], Int)
