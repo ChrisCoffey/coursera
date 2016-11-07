@@ -9,6 +9,7 @@ module QuicksortCounting (
 import Data.List (sortBy)
 import qualified Data.Vector as V
 
+
 --Uses the first element as the pivot
 quicksort2 :: Ord a => V.Vector a -> (V.Vector a, Int)
 quicksort2 v
@@ -36,11 +37,11 @@ quicksort2' v
         comps   = length v - 1
         in (lt V.++ V.singleton pivot V.++ gt, a + b + comps)
 
---
-quicksort2'' :: Ord a => V.Vector a -> (V.Vector a, Int)
+-- Uses the median of the head, tail, or midpoint
+quicksort2'' :: (Ord a, Show a) => V.Vector a -> (V.Vector a, Int)
 quicksort2'' v 
     | V.null v          = (v, 0)
-    | V.length v == 1   = (v, 0) 
+    | V.length v == 1   = (v, 0)
     | otherwise         = let
         (pivot, idx)   = findPivot
         v'      = v `V.update` (V.fromList [(0, pivot), (idx, V.head v)]) --constant time swap to preserve partition' implementation
@@ -50,7 +51,7 @@ quicksort2'' v
         comps   = length v - 1
         in (lt V.++ V.singleton pivot V.++ gt, a + b + comps)
     where 
-    middleIndex = if even $ V.length v then V.length v `div` 2 else (V.length v `div` 2 ) + 1
+    middleIndex = if even $ V.length v then (V.length v `div` 2) -1 else (V.length v `div` 2 ) 
     findPivot = head . tail $ sortBy (\a b-> fst a `compare` fst b) [(V.head v, 0), 
                                     (V.last v, V.length v - 1),
                                     (v V.! middleIndex, middleIndex)]
