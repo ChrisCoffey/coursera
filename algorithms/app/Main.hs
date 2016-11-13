@@ -1,14 +1,10 @@
 module Main where
 
-import QuicksortCounting
-
-import qualified Data.Vector as V
+import MinCuts
 
 main :: IO ()
 main = do
-    lines <- lines <$> readFile "data/QuicksortCounting.txt"
-    let ns = read <$> lines :: [Int]
-    print . snd $ quicksort2 (V.fromList ns)
-    print . snd $ quicksort2' (V.fromList ns)
-    print . snd $ quicksort2'' (V.fromList ns)
-
+    lines <- lines <$> readFile "data/MinCuts.txt"
+    let ns = fmap read .  words <$> lines :: [[Int]]
+    let g = makeGraph ns
+    print . show . minimum =<< minCutNtrials 40 g
