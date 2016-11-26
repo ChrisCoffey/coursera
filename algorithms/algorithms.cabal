@@ -19,6 +19,7 @@ library
                      , ArrayInversion
                      , QuicksortCounting
                      , MinCuts
+                     , SCCs
   build-depends:       base >= 4.7 && < 5
                      , vector
                      , containers >= 0.5.7.1
@@ -32,6 +33,7 @@ executable algorithms-exe
   build-depends:       base
                      , algorithms
                      , vector
+                     , containers >= 0.5.7.1
   default-language:    Haskell2010
 
 test-suite algorithms-test

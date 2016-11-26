@@ -1,10 +1,23 @@
 module Main where
 
-import MinCuts
+import SCCs
+import Data.Map
+import Data.List (sortBy, nub)
 
 main :: IO ()
-main = do
-    lines <- lines <$> readFile "data/MinCuts.txt"
-    let ns = fmap read .  words <$> lines :: [[Int]]
-    let g = makeGraph ns
-    print . show . minimum =<< minCutNtrials 40 g
+main = runSCCs
+
+runSCCs :: IO ()
+runSCCs = do
+    lines <- lines <$> readFile "data/SCC.txt"
+    print "Loading graph"
+    g <- pure $ makeGraph lines
+    print "Graph Loaded"
+    print "Finding SCCs"
+    sccs <- pure $ findSCCs g
+    print "SCCs Found"
+    print "Preparing Output"
+    lengths <- pure (sortBy s $ toList sccs)
+    print . show $ take 100 (length . snd <$> lengths)
+    where 
+    s l r = (length $ snd r) `compare` (length $ snd l)
