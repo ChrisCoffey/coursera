@@ -1,11 +1,20 @@
 module Main where
 
+import qualified Data.Map as M
+import qualified Dijkstra as D
 import SCCs
-import Data.Map
-import Data.List (sortBy, nub)
+
+import Data.List (sortBy, nub, intercalate)
 
 main :: IO ()
-main = runSCCs
+main = runDijkstra
+
+runDijkstra :: IO ()
+runDijkstra = do
+    g <- D.makeGraph "data/DijkstraData.txt"
+    let paths = D.shortestPaths g
+    let res = (paths M.!) <$> [7,37,59,82,99,115,133,165,188,197]
+    print . intercalate "," . fmap show $ res
 
 runSCCs :: IO ()
 runSCCs = do
@@ -17,7 +26,7 @@ runSCCs = do
     sccs <- pure $ findSCCs g
     print "SCCs Found"
     print "Preparing Output"
-    lengths <- pure (sortBy s $ toList sccs)
+    lengths <- pure (sortBy s $ M.toList sccs)
     print . show $ take 100 (length . snd <$> lengths)
     where 
     s l r = (length $ snd r) `compare` (length $ snd l)

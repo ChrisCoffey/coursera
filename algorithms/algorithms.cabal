@@ -23,11 +23,14 @@ library
                      , Heap
                      , LeftistHeap
                      , Dijkstra
+                     , Queue
+                     , LQueue
   build-depends:       base >= 4.7 && < 5
                      , vector
                      , containers >= 0.5.7.1
                      , random >= 1.1
                      , parsec >= 3.1.11
+                     , PSQueue >= 1.1
   default-language:    Haskell2010
 
 executable algorithms-exe

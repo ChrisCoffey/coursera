@@ -1,5 +1,6 @@
 module LeftistHeap (
-    LeftistHeap
+    LeftistHeap,
+    deleteArb
 ) where
 
 import Heap
@@ -15,6 +16,17 @@ rank (Node r _ _ _) = r
 makeNode x l r = if rank l >= rank r
                  then Node (rank r + 1) x l r
                  else Node (rank l + 1) x r l
+
+{-Not terribly fast -}
+deleteArb :: (Ord a, Eq a) => a -> LeftistHeap a -> LeftistHeap a
+deleteArb x h = let
+    hs = drain h
+    hs' = filter (/= x) hs
+    in foldl insert makeEmpty hs'
+
+drain ::  LeftistHeap a -> [a]
+drain Empty = []
+drain (Node _ x l r) = x:(drain l ++ drain r)
 
 instance Heap LeftistHeap where
     makeEmpty = Empty
@@ -37,4 +49,3 @@ instance Heap LeftistHeap where
     deleteMin Empty = error "Boom. Empty Heap has no min. Can't delete it"
     deleteMin (Node _ _ l r) = merge l r
 
-    
