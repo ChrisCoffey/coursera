@@ -1,5 +1,6 @@
 module Heap (
-    Heap(..)
+    Heap (..),
+    MaxHeap (..)
 ) where
 
 
@@ -11,3 +12,11 @@ class Heap h where
     merge :: Ord a => h a -> h a -> h a
     makeEmpty :: Ord a => h a
 
+
+class MaxHeap h where
+    isEmptyMax :: Ord a => h a -> Bool
+    getMax :: Ord a => h a -> a
+    deleteMax :: Ord a => h a -> h a
+    insertMax :: Ord a => h a -> a -> h a
+    mergeMax :: Ord a => h a -> h a -> h a
+    makeEmptyMax :: Ord a => h a

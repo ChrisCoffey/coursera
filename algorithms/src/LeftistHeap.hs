@@ -49,3 +49,23 @@ instance Heap LeftistHeap where
     deleteMin Empty = error "Boom. Empty Heap has no min. Can't delete it"
     deleteMin (Node _ _ l r) = merge l r
 
+instance MaxHeap LeftistHeap where
+    makeEmptyMax = Empty
+    isEmptyMax Empty = True
+    isEmptyMax _ = False
+    
+    insertMax h x = mergeMax (makeNode x Empty Empty) h
+    
+    mergeMax h Empty = h
+    mergeMax Empty h = h
+    mergeMax h@(Node _ x l r) h'@(Node _ x' l' r') = 
+        if x > x'
+        then makeNode x l (mergeMax r h')
+        else makeNode x' l' (mergeMax r' h)
+
+    getMax Empty = error "No max in an empty heap"
+    getMax (Node _ m _ _) = m
+
+    deleteMax Empty = error "Can't delete max from an empty heap"
+    deleteMax (Node _ _ l r) = mergeMax l r
+
