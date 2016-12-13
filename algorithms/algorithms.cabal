@@ -26,8 +26,11 @@ library
                      , Queue
                      , LQueue
                      , MedianMaintenance
+                     , RedBlackTree
+                     , SearchTree
   build-depends:       base >= 4.7 && < 5
                      , vector
+                     , vector-algorithms
                      , containers >= 0.5.7.1
                      , random >= 1.1
                      , parsec >= 3.1.11
