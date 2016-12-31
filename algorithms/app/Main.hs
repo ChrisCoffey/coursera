@@ -2,12 +2,13 @@ module Main where
 
 import qualified Data.Map as M
 import qualified Dijkstra as D
+import qualified TwoSum as TS
 import SCCs
 
 import Data.List (sortBy, nub, intercalate)
 
 main :: IO ()
-main = runDijkstra
+main = runTwoSum
 
 runDijkstra :: IO ()
 runDijkstra = do
@@ -30,3 +31,10 @@ runSCCs = do
     print . show $ take 100 (length . snd <$> lengths)
     where 
     s l r = (length $ snd r) `compare` (length $ snd l)
+
+runTwoSum :: IO ()
+runTwoSum = do
+    lines <- lines <$> readFile "data/2Sum.txt"
+    let ns = (\x -> read x :: Int) <$> lines 
+    let res = TS.doTwoSum' ns 
+    print (show res)
