@@ -5,6 +5,7 @@ module MaxSpaceKCluster where
 
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Data.Heap as H
 import Data.List (sortBy)
 import Data.Ord (comparing)
 import Data.Text (pack, unpack, splitOn)
@@ -12,6 +13,7 @@ import Data.Text (pack, unpack, splitOn)
 import Debug.Trace
 
 type DistanceFunction = M.Map Int (M.Map Int Int)
+type Edges = H.MinPrioHeap Int (Int, Int)
 
 data UnionNode = UnionNode {rank :: Int, root :: Int} deriving Show
 type UnionFind = M.Map Int UnionNode -- Padded to be 1 indexed
@@ -41,8 +43,10 @@ uUnion a b uf = let
 
 loadEdges :: 
     String -> 
-    IO [(Int, Int, Int)]
-loadEdges = fmap ( sortBy (comparing third) . fmap parseLine . lines) .  readFile 
+    IO Edges
+loadEdges path = do  
+    ints <- fmap ( fmap parseLine . lines) $  readFile path
+    pure $ H.fromList [(d,(a,b))| (b,a,d) <- ints]
 
 loadEdgeFunction :: 
     String -> 
@@ -67,19 +71,23 @@ third (a,b,c) = c
 first (a,b,c) = a
 second (a,b,c) = b
 
+--TODO with clear head: debug this
 singleLinkCluster :: 
     Int -> -- k
     UnionFind ->
-    [(Int, Int, Int)] -> -- sorted edges
+    Edges -> -- sorted edges
     Int -- Max-spacing
 singleLinkCluster k uf edges = 
     go uf edges (M.size uf)
     where
-    go _ [] _ = -1
-    go unionfind (x:xs) clusterCount
-        | distinctRoots unionfind == k = third $ head xs -- spacing on remaining edge
-        | uFind (first x) unionfind == uFind (second x) unionfind = go unionfind xs clusterCount -- same cluster
-        | otherwise = go (uUnion (first x) (second x) unionfind) xs (clusterCount -1)
+    go :: UnionFind -> Edges -> Int -> Int
+    go unionfind es clusterCount
+        | H.null es = -1
+        | uFind a unionfind == uFind b unionfind = go unionfind edges' clusterCount -- if same cluster, ignore & continue
+        | clusterCount == k = dist -- spacing on remaining edge
+        | otherwise = go (uUnion a b unionfind) edges' (clusterCount -1)
+        where
+        Just ((dist, (a,b)), edges') = H.view es
            
 distinctRoots ::
     UnionFind ->

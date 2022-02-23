@@ -32,6 +32,7 @@ library
                      , JobScheduling
                      , PrimsMST
                      , MaxSpaceKCluster 
+                     , MaxKTest
   build-depends:       base >= 4.7 && < 5
                      , async >= 2.1.0
                      , bitwise >= 0.1.1.1
@@ -42,6 +43,9 @@ library
                      , parsec >= 3.1.11
                      , PSQueue >= 1.1
                      , text
+                     , bytestring
+                     , array
+                     , heap
   default-language:    Haskell2010
 
 executable algorithms-exe
