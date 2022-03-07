@@ -1,32 +1,47 @@
 import * as fs from 'fs'
 
 type Job = { weight: number, length: number }
+type GreedySchedule = (left: Job, right: Job) => number
 
-function jobs(): void {
-  const rawLines = fs.readFileSync('data/GreedyJobs.txt')
-  const jobs : Job[] = rawLines.toString().split("\n").map(parseJob)
-
-
-  let completionTime: number = 0
-  // where is the NaN job coming from? It's at the head of the list
-  const cleanedJobs = prepareJobs(jobs)
-  console.log(cleanedJobs.slice(0, 10), cleanedJobs.length)
-  const result = cleanedJobs.slice(1).map((job) => {
-    if (job.length === NaN) { return 0 }
-    completionTime += job.length
-    return completionTime * job.weight
-  }).reduce((a,b) => {return a+b})
+function jobWeightedCompletions(scheduleFunc: GreedySchedule): void {
+  const cleanedJobs = prepareJobs('data/GreedyJobs.txt')
+  const result = weightedCompletionTimes(cleanedJobs, scheduleFunc)
 
   console.log(result)
 }
 
-function prepareJobs(jobs: Job[]): Job[] {
-  return jobs.sort(sortByPriority).reverse()
+function weightedCompletionTimes(rawJobs: Job[], scheduleFunc: GreedySchedule): number {
+  const jobs = rawJobs.sort(scheduleFunc).reverse()
+  let completionTime: number = 0
+
+  return jobs.slice(1).map((job) => {
+      completionTime += job.length
+      return completionTime * job.weight
+    }).reduce((a,b) => {return a+b})
 }
 
-function sortByPriority(left: Job, right: Job) : number {
-  const priorityL = jobPriority(left)
-  const priorityR = jobPriority(right)
+function prepareJobs(dataPath: string): Job[] {
+  const rawLines = fs.readFileSync(dataPath)
+  const jobs : Job[] = rawLines.toString().split("\n").map(parseJob)
+  return jobs
+}
+
+function ratioSort(left: Job, right: Job): number {
+  const priorityL = ratioPriority(left)
+  const priorityR = ratioPriority(right)
+
+  if(priorityL < priorityR) { return -1 }
+  if(priorityL > priorityR) { return 1 }
+  return 0
+}
+
+function ratioPriority(job: Job): number {
+  return job.weight / job.length
+}
+
+function differenceSort(left: Job, right: Job) : number {
+  const priorityL = differencePriority(left)
+  const priorityR = differencePriority(right)
 
   if(priorityL < priorityR) { return -1 }
   if(priorityR < priorityL) { return 1 }
@@ -34,7 +49,7 @@ function sortByPriority(left: Job, right: Job) : number {
 }
 
 // This is the non-optiomal "difference" algorithm for determining priority
-function jobPriority(job: Job): number {
+function differencePriority(job: Job): number {
   return job.weight - job.length
 }
 
@@ -52,4 +67,7 @@ function parseJob(str: string): Job {
 }
 
 
-jobs()
+jobWeightedCompletions(differenceSort)
+jobWeightedCompletions(ratioSort)
+
+
