@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import * as heap from './heap'
 
 type Job = { weight: number, length: number }
 type GreedySchedule = (left: Job, right: Job) => number
@@ -70,4 +71,16 @@ function parseJob(str: string): Job {
 jobWeightedCompletions(differenceSort)
 jobWeightedCompletions(ratioSort)
 
+const h = new heap.MinHeap()
+h.insert(10)
+h.insert(5)
+h.insert(4)
+h.insert(7)
+h.insert(3)
+h.insert(1)
+h.print()
 
+
+console.log(h.extractMin())
+console.log(h.extractMin())
+console.log(h.extractMin())
