@@ -1,9 +1,18 @@
-class MinHeap {
-  private storage: number[] = []
+enum CompareResult { Lt, Gt, Eq }
 
-  public print(): void { console.log(this.storage) }
+interface Comparable<A> {
+  (l: A, r: A): CompareResult
+}
 
-  public extractMin(): number | undefined {
+class MinHeap<A> {
+  private storage: A[] = []
+  private compare: Comparable<A>
+
+  constructor(compare: Comparable<A>) {
+    this.compare = compare
+  }
+
+  public extractMin(): A | undefined {
     if(this.storage.length === 0) { return undefined }
 
     const min = this.storage[0]
@@ -14,21 +23,21 @@ class MinHeap {
     return min
   }
 
-  public findMin(): number | undefined {
+  public findMin(): A | undefined {
     if(this.storage.length == 0) { return undefined}
 
     return this.storage[0]
   }
 
-  public insert(x: number) : void {
+  public insert(x: A) : void {
     this.pushUp(x, this.storage.length)
   }
 
-  private pushUp(x: number, index: number): void {
+  private pushUp(x: A, index: number): void {
     if(index === 0) { this.storage[index] = x}
 
     const parentNode = Math.floor(index / 2)
-    if(x < this.storage[parentNode]) {
+    if(this.compare(x, this.storage[parentNode]) === CompareResult.Lt ) {
       this.storage[index] = this.storage[parentNode]
       this.pushUp(x, parentNode)
     }
@@ -37,7 +46,7 @@ class MinHeap {
     }
   }
 
-  private pushDown(x: number, index: number): void {
+  private pushDown(x: A, index: number): void {
     const leftChild = this.left(index)
     const rightChild = this.right(index)
     const smallestChild = this.storage[leftChild] < this.storage[rightChild] ? leftChild : rightChild
@@ -77,4 +86,4 @@ class MinHeap {
   }
 }
 
-export { MinHeap }
+export { MinHeap, Comparable, CompareResult }

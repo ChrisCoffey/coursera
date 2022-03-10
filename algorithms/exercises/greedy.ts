@@ -68,19 +68,57 @@ function parseJob(str: string): Job {
 }
 
 
+type Edge = {a: number, b: number, weight: number}
+function compEdge(l: Edge, r: Edge): heap.CompareResult {
+  if (l.weight < r.weight) { return heap.CompareResult.Lt }
+  if (l.weight > r.weight) { return heap.CompareResult.Gt }
+  return heap.CompareResult.Eq
+}
+
+
+function primsMST() {
+  const edgeHeap = new heap.MinHeap<Edge>(compEdge)
+  const seenEdges = new Set()
+  const allEdges = parseEdges('data/GreedyMST.test')
+
+}
+
+function parseEdges(path: string): Edge[] {
+  const raw = fs.readFileSync(path)
+  const parseEdge = (ln: string) => {
+    const  [a,b, weight] = ln.split(" ").map((x) => parseInt(x))
+    return {a: a, b: b, weight: weight}
+  }
+
+  const edges: Edge[] = raw.toString().split("\n").map(parseEdge)
+  return edges
+}
+
+function groupEdges(edges: Edge[]): Edge[][] {
+  const groupedEdges = []
+  edges.forEach((edge) => {
+    if(groupedEdges[edge.a] === undefined) { groupedEdges[edge.a] = []}
+    if(groupedEdges[edge.b] === undefined) { groupedEdges[edge.b] = []}
+
+    groupedEdges[edge.a].push(edge)
+    groupedEdges[edge.b].push(edge)
+  })
+  return groupedEdges
+}
+
+function minEdges(edges: Edge[][]): Edge[] {
+  return edges.map((focusedEdges) => { return minBy(compEdge, focusedEdges)} )
+}
+
+function minBy<A>(tc: heap.Comparable<A>, xs: A[]): A {
+  let min = xs[0]
+  xs.forEach((x) => {
+    if(tc(x, min) === heap.CompareResult.Lt) { min = x }
+  })
+  return min
+}
+
 jobWeightedCompletions(differenceSort)
 jobWeightedCompletions(ratioSort)
 
-const h = new heap.MinHeap()
-h.insert(10)
-h.insert(5)
-h.insert(4)
-h.insert(7)
-h.insert(3)
-h.insert(1)
-h.print()
 
-
-console.log(h.extractMin())
-console.log(h.extractMin())
-console.log(h.extractMin())
