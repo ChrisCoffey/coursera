@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import {send} from 'process'
 import * as heap from './heap'
 
 type Job = { weight: number, length: number }
@@ -75,12 +76,37 @@ function compEdge(l: Edge, r: Edge): heap.CompareResult {
   return heap.CompareResult.Eq
 }
 
+type Vertex = {a: number, weight: number}
+
 
 function primsMST() {
-  const edgeHeap = new heap.MinHeap<Edge>(compEdge)
-  const seenEdges = new Set()
+  //const edgeHeap = new heap.MinHeap<Edge>(compEdge)
+  const seenVertices: Set<number> = new Set()
   const allEdges = parseEdges('data/GreedyMST.test')
+  const vertices: Edge[][] = groupEdges(allEdges)
+  const mst = []
+  let smallestEdges = minEdges(vertices)
 
+  seenVertices.add(1)
+  mst.push(smallestEdges[1])
+
+  while(seenVertices.size != vertices.length) {
+    const frontier : Edge[] = []
+
+    seenVertices.forEach((v) => {
+      const xs = vertices[v].filter((edge) => {
+          return !seenVertices.has(edge.b)
+        })
+      xs.forEach((x) => {frontier.push(x)})
+    })
+
+    const minEdge = minBy(compEdge, frontier)
+    console.log(minEdge, seenVertices)
+    mst.push(minEdge)
+    seenVertices.add(minEdge.b)
+  }
+
+  console.log(mst)
 }
 
 function parseEdges(path: string): Edge[] {
@@ -95,13 +121,14 @@ function parseEdges(path: string): Edge[] {
 }
 
 function groupEdges(edges: Edge[]): Edge[][] {
-  const groupedEdges = []
+  const groupedEdges : Edge[][] = []
   edges.forEach((edge) => {
     if(groupedEdges[edge.a] === undefined) { groupedEdges[edge.a] = []}
     if(groupedEdges[edge.b] === undefined) { groupedEdges[edge.b] = []}
 
     groupedEdges[edge.a].push(edge)
-    groupedEdges[edge.b].push(edge)
+    const flippedEdge = {a: edge.b, b: edge.a, weight: edge.weight}
+    groupedEdges[edge.b].push(flippedEdge)
   })
   return groupedEdges
 }
@@ -118,7 +145,7 @@ function minBy<A>(tc: heap.Comparable<A>, xs: A[]): A {
   return min
 }
 
-jobWeightedCompletions(differenceSort)
-jobWeightedCompletions(ratioSort)
-
+//jobWeightedCompletions(differenceSort)
+//jobWeightedCompletions(ratioSort)
+primsMST()
 

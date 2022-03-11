@@ -29,6 +29,14 @@ class MinHeap<A> {
     return this.storage[0]
   }
 
+  public delete(x: A): void {
+    const idx = this.storage.indexOf(x)
+    if (idx < 0) return
+
+    this.moveLastTo(idx)
+    this.pushDown(this.storage[idx], idx)
+  }
+
   public insert(x: A) : void {
     this.pushUp(x, this.storage.length)
   }
@@ -75,7 +83,11 @@ class MinHeap<A> {
   }
 
   private moveLastToRoot(): void {
-    this.storage[0] = this.storage[this.storage.length -1]
+    this.moveLastTo(0)
+  }
+
+  private moveLastTo(idx: number): void {
+    this.storage[idx] = this.storage[this.storage.length -1]
     this.storage.length = this.storage.length - 1
   }
 
