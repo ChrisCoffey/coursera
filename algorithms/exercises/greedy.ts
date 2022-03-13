@@ -16,7 +16,7 @@ function weightedCompletionTimes(rawJobs: Job[], scheduleFunc: GreedySchedule): 
   const jobs = rawJobs.sort(scheduleFunc).reverse()
   let completionTime: number = 0
 
-  return jobs.slice(1).map((job) => {
+  return jobs.map((job) => {
       completionTime += job.length
       return completionTime * job.weight
     }).reduce((a,b) => {return a+b})
@@ -24,7 +24,7 @@ function weightedCompletionTimes(rawJobs: Job[], scheduleFunc: GreedySchedule): 
 
 function prepareJobs(dataPath: string): Job[] {
   const rawLines = fs.readFileSync(dataPath)
-  const jobs : Job[] = rawLines.toString().split("\n").map(parseJob)
+  const jobs : Job[] = rawLines.toString().split("\n").filter(x => x.length > 0).map(parseJob)
   return jobs
 }
 
@@ -56,8 +56,8 @@ function differencePriority(job: Job): number {
 }
 
 function compareByWeight(left: Job, right: Job): number{
-  if(left.weight > right.weight) { return -1 }
-  if(left.weight < right.weight) { return 1 }
+  if(left.weight < right.weight) { return -1 }
+  if(left.weight > right.weight) { return 1 }
   return 0
 }
 
@@ -80,33 +80,32 @@ type Vertex = {a: number, weight: number}
 
 
 function primsMST() {
-  //const edgeHeap = new heap.MinHeap<Edge>(compEdge)
   const seenVertices: Set<number> = new Set()
-  const allEdges = parseEdges('data/GreedyMST.test')
+  const allEdges = parseEdges('data/GreedyGraph.txt')
   const vertices: Edge[][] = groupEdges(allEdges)
   const mst = []
-  let smallestEdges = minEdges(vertices)
 
   seenVertices.add(1)
-  mst.push(smallestEdges[1])
 
-  while(seenVertices.size != vertices.length) {
-    const frontier : Edge[] = []
-
-    seenVertices.forEach((v) => {
-      const xs = vertices[v].filter((edge) => {
-          return !seenVertices.has(edge.b)
-        })
-      xs.forEach((x) => {frontier.push(x)})
+  while(seenVertices.size != vertices.length - 1) {
+    const newVertices = vertices.filter((edges, vertex) => {
+      return edges !== undefined && !seenVertices.has(vertex)
     })
 
+    // Create a cut between the seen and unseen vertices, returning all edges that cross it
+    const frontier = newVertices.flatMap((edges) => {
+      const crossingEdges = edges.filter((edge) => { return seenVertices.has(edge.b) })
+      return crossingEdges.length > 0 ? [minBy(compEdge, crossingEdges)] : []
+    })
+
+    // a is not in the seenVertices, but b is
     const minEdge = minBy(compEdge, frontier)
-    console.log(minEdge, seenVertices)
+    seenVertices.add(minEdge.a)
     mst.push(minEdge)
-    seenVertices.add(minEdge.b)
   }
 
-  console.log(mst)
+  const mstSum = mst.map(edge => edge.weight).reduce((l,r) => l + r)
+  console.log(mstSum)
 }
 
 function parseEdges(path: string): Edge[] {
@@ -115,8 +114,7 @@ function parseEdges(path: string): Edge[] {
     const  [a,b, weight] = ln.split(" ").map((x) => parseInt(x))
     return {a: a, b: b, weight: weight}
   }
-
-  const edges: Edge[] = raw.toString().split("\n").map(parseEdge)
+  const edges: Edge[] = raw.toString().split("\n").filter((x) => x.length > 0).map(parseEdge)
   return edges
 }
 
@@ -133,10 +131,6 @@ function groupEdges(edges: Edge[]): Edge[][] {
   return groupedEdges
 }
 
-function minEdges(edges: Edge[][]): Edge[] {
-  return edges.map((focusedEdges) => { return minBy(compEdge, focusedEdges)} )
-}
-
 function minBy<A>(tc: heap.Comparable<A>, xs: A[]): A {
   let min = xs[0]
   xs.forEach((x) => {
@@ -145,7 +139,7 @@ function minBy<A>(tc: heap.Comparable<A>, xs: A[]): A {
   return min
 }
 
-//jobWeightedCompletions(differenceSort)
-//jobWeightedCompletions(ratioSort)
+jobWeightedCompletions(differenceSort)
+jobWeightedCompletions(ratioSort)
 primsMST()
 

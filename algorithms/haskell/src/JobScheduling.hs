@@ -16,12 +16,12 @@ import Debug.Trace
 data Job = Job {weight :: Integer, len :: Integer}
     deriving (Eq, Show)
 
-byRatio :: 
+byRatio ::
     String ->
     IO Integer
 byRatio = fmap (weightedCompletionTime . sortByRatio) . jobList
 
-byDiff :: 
+byDiff ::
     String ->
     IO Integer
 byDiff = fmap (weightedCompletionTime . sortByDiff) . jobList
@@ -36,7 +36,7 @@ sortByDiff = concatMap groupSort . groupBy groupKey . sortBy (flip $ comparing j
     groupSort :: [Job] -> [Job]
     groupSort = sortBy (flip $ comparing weight)
     groupKey l r = jobDiff l == jobDiff r
-  
+
 sortByRatio ::
     [Job] ->
     [Job]
@@ -44,17 +44,17 @@ sortByRatio = sortBy (flip $ comparing jobRatio)
     where
     jobRatio (Job {..}) = fromInteger weight / fromInteger len
 
-weightedCompletionTime :: 
+weightedCompletionTime ::
     [Job] ->
     Integer
 weightedCompletionTime = sum . fmap weighted . compTimes
     where
     weighted Job {..} = weight * len
-    compTimes (p:j:js) = let 
-        newJ = j {len= len j + len p }
-        in p:compTimes (newJ:js)
-    compTimes [j] = [j]
-    compTime n (Job {..}) = n + len
+
+compTimes (p:j:js) = let
+    newJ = j {len= len j + len p }
+    in p:compTimes (newJ:js)
+compTimes [j] = [j]
 
 jobList :: FilePath -> IO [Job]
 jobList f = do
