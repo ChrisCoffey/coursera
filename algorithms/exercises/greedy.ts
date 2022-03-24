@@ -1,5 +1,4 @@
 import * as fs from 'fs'
-import {send} from 'process'
 import * as heap from './heap'
 
 type Job = { weight: number, length: number }
