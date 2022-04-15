@@ -1,14 +1,15 @@
 // A union-find that supports path compression, for very fast find and union
 // operations.
-type Node<A> = { value: A, rank: number, parent: Node<A> | null }
+type Node<A> = { value: A, rank: number, parent: Node<A> | undefined }
 
 class UnionFind<A> {
   private storage : Map<A, Node<A>>
 
-  private toNode = (a : A) => { return {value: a, rank: 0, parent: null } }
+  private toNode = (a : A) => { return {value: a, rank: 0, parent: undefined } }
 
   // It is not possible to add new nodes after construction
-  constructor(data: [A]) {
+  constructor(data: A[]) {
+    this.storage = new Map()
     data.forEach((d) => { this.storage.set(d, this.toNode(d)) } )
   }
 
@@ -16,18 +17,18 @@ class UnionFind<A> {
   public find(x: A): A  {
     // A root node
     const node = this.storage.get(x)
-    if(node.parent === null) { return x }
+    if(node === undefined || node.parent === undefined) { return x }
 
     // Points directly to a root
     const p = node.parent
-    if(p.parent === null) { return p.value }
+    if(p.parent === undefined) { return p.value }
 
     // compress the path recursively by repointing to the cluster root
     const rootValue: A = this.find(node.parent.value)
     node.parent = this.storage.get(rootValue)
 
 
-    return node.parent.value
+    return rootValue
   }
 
   public union(x: A, y: A): void {
@@ -36,8 +37,12 @@ class UnionFind<A> {
     if (xCluster === yCluster) { return }
 
     // Determine which cluster merges into the other
-    const xNode = this.storage.get(xCluster)
+    const xNode  = this.storage.get(xCluster)
     const yNode = this.storage.get(yCluster)
+    if(xNode === undefined || yNode === undefined) {
+      console.log("[Error] unknown cluster", xCluster, yCluster, xNode, yNode)
+      return
+    }
 
     const largerCluster = xNode.rank > yNode.rank ? xNode : yNode
     const smallerCluster = xNode == largerCluster ? yNode : xNode
