@@ -37,7 +37,7 @@ class UnionFind<A> {
     if (xCluster === yCluster) { return }
 
     // Determine which cluster merges into the other
-    const xNode  = this.storage.get(xCluster)
+    const xNode = this.storage.get(xCluster)
     const yNode = this.storage.get(yCluster)
     if(xNode === undefined || yNode === undefined) {
       console.log("[Error] unknown cluster", xCluster, yCluster, xNode, yNode)
@@ -53,6 +53,27 @@ class UnionFind<A> {
     // Increment rank of the larger cluster iff both clusters had same rank
     if (smallerCluster.rank === largerCluster.rank) { largerCluster.rank += 1 }
 
+  }
+
+  public prettyPrint(): void {
+    const clusters : Map<A, A[]> = new Map()
+    for (let [_, node] of this.storage) {
+      // Is it a cluster root?
+      if(node.parent === undefined) {
+        // has this cluster been seen already?
+        const cluster: A[] = clusters.get(node.value) || []
+        cluster.push(node.value)
+        clusters.set(node.value, cluster)
+      } else {
+        const cluster: A[] = clusters.get(node.parent.value) || []
+        cluster.push(node.value)
+        clusters.set(node.parent.value, cluster)
+      }
+    }
+
+    for(let [cluster, elements] of clusters) {
+      console.log(`Cluster ${cluster} with elements ${elements}` )
+    }
   }
 
 }
