@@ -12,23 +12,28 @@ function maxSpacingKClustering(dataPath: string, k: number): number {
   let numClusters: number = distinctPoints.size
   const sortedEdges: Edge[] = edges.sort((a,b) => {return a.cost - b.cost})
 
-  while(numClusters > k) {
-    if(sortedEdges.length == 0) { break }
-    const edge: Edge = sortedEdges[0]
-    const c1 = unionFind.find(edge.a)
-    const c2 = unionFind.find(edge.b)
+  //console.log(sortedEdges)
 
-    if(c1 !== c2) {
-      unionFind.union(c1, c2)
-      numClusters--
+  while(numClusters > k) {
+    if(sortedEdges.length == 0) {
+      break
+    }
+    const edge: Edge | undefined = sortedEdges.shift()
+    if(edge === undefined) {
+      break
     }
 
-    sortedEdges.shift()
+    if(unionFind.union(edge.a, edge.b)) {
+      numClusters--
+    } else {
+    }
   }
+
+  const spacing = sortedEdges.find(edge => unionFind.union(edge.a, edge.b))
 
 
   unionFind.prettyPrint()
-  return sortedEdges[0].cost
+  return spacing?.cost || -1
 }
 
 function processEdgeFile(path: string): Edge[] {
@@ -43,4 +48,4 @@ function processEdgeFile(path: string): Edge[] {
 
 
 
-console.log(maxSpacingKClustering("data/clustering1.test", 2))
+console.log(maxSpacingKClustering("data/clustering1.txt", 4))
