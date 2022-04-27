@@ -54,7 +54,7 @@ console.log(maxSpacingKClustering("data/clustering1.txt", 4))
 
 function computeBinaryClusteringMaxK(path: string): number {
   // Preprocessing
-  const hextets = processBinaryNodes(path)
+  const hextets = processBinaryNodes(path).slice(0, 20)
   let index = {
     a: new Map<number, Set<number>>(),
     b: new Map<number, Set<number>>(),
@@ -65,10 +65,19 @@ function computeBinaryClusteringMaxK(path: string): number {
   hextets.forEach((h: Hextet) => {
     index = indexHextet(index, h)
   })
+  console.log(hextets.length, index)
 
   // Compute the edges
-  const edges = hextets.flatMap((h) => {return computeEdgesFromIndex(index, h) })
-  const sortedEdges = edges.sort((a, b) => {return a.cost - b.cost})
+  const edges : Edge[] = []
+  hextets.forEach(
+    (h) => {
+      edges.concat(computeEdgesFromIndex(index, h))
+  })
+  console.log(edges.length)
+  const sortedEdges = edges.sort(
+    (a, b) => {return a.cost - b.cost}
+  )
+  console.log(sortedEdges.length)
 
   // Run the clustering algorithm, tracking how many clusters remain after processing all valid edges
   const unionFind = new UnionFind<number>(Array.from(hextets.map((h) => {return h.value})))
@@ -103,35 +112,58 @@ function processBinaryNodes(path: string): Hextet[] {
 type IndexSlice = Map<number, Set<number>>
 type HextetIndex = {a: IndexSlice, b: IndexSlice, c: IndexSlice, d: IndexSlice}
 function indexHextet(index: HextetIndex, h: Hextet): HextetIndex {
-  function updateIndex(key: string) {
-    const seen: Set<number> = index[key].get(h[key]) || new Set<number>()
-    seen.add(h.value)
-    index[key].set(h[key], seen)
-  }
+  let seen: Set<number> = index.a.get(h.a) || new Set<number>()
+  seen.add(h.value)
+  index.a.set(h.a, seen)
 
-  ["a", "b", "c", "d"].forEach(updateIndex)
+  seen = index.b.get(h.b) || new Set<number>()
+  seen.add(h.value)
+  index.b.set(h.b, seen)
+
+  seen = index.c.get(h.c) || new Set<number>()
+  seen.add(h.value)
+  index.c.set(h.c, seen)
+
+  seen = index.d.get(h.d) || new Set<number>()
+  seen.add(h.value)
+  index.d.set(h.d, seen)
 
   return index
 }
 
 // This could be more efficient
-const hextetPairs = [["a", "b"], ["a", "c"], ["a", "d"], ["b", "c"], ["b", "d"], ["c", "d"]]
+function hextetPairs (index: HextetIndex, h: Hextet): [IndexSlice, IndexSlice, number, number][] {
+  return [
+    [index.a, index.b, h.a, h.b],
+    [index.a, index.c, h.a, h.c],
+    [index.a, index.d, h.a, h.d],
+    [index.b, index.c, h.b, h.c],
+    [index.b, index.d, h.b, h.d],
+    [index.c, index.d, h.c, h.d]
+  ]
+}
+
 function computeEdgesFromIndex(index: HextetIndex, h: Hextet): Edge[] {
   const candidates: Set<number> = new Set<number>()
 
-  hextetPairs.forEach(([left, right]) => {
-    const ls: Set<number> = index[left].get(h[left])
-    const rs: Set<number> = index[right].get(h[right])
-    // This is set intersection.
-    const xs: number[] = Array.from([...ls].filter(x => rs.has(x)))
-    xs.forEach((v) => {
-      candidates.add(v)
-    })
+  hextetPairs(index, h).forEach(
+    ([left, right, hl, hr]) => {
+      const ls: Set<number> = left.get(hl) || new Set<number>()
+      const rs: Set<number> = right.get(hr)|| new Set<number>()
+      // This is set intersection.
+      const xs: number[] = Array.from([...ls].filter(x => rs.has(x)))
+      xs.forEach(
+        (v) => {
+          candidates.add(v)
+      })
   })
+  console.log(h, candidates)
 
   return Array.from(candidates.values())
-    .filter((node: number) => {return isCloseEnough(h, node)})
-    .map((node: number) => { return {a: h.value, b: node, cost: hammingWeight(h.value ^ node)} })
+    .filter(
+      (node: number) => {return h.value != node && isCloseEnough(h, node) })
+    .map(
+      (node: number) => { return {a: h.value, b: node, cost: hammingWeight(h.value ^ node)} })
 }
 
 function isCloseEnough(h: Hextet, node: number): boolean {
@@ -140,7 +172,7 @@ function isCloseEnough(h: Hextet, node: number): boolean {
 }
 
 
-// This is an awesome algorithm. It takes advantage of what subtractin 1 does to binary numbers!
+// This is an awesome algorithm. It takes advantage of what subtracting 1 does to binary numbers!
 // Namely, it flips all the bits to the right of the rightmost set bit.
 function hammingWeight(n: number): number {
   let count:number = 0
@@ -153,7 +185,8 @@ function hammingWeight(n: number): number {
 
 function bitsToNumber(bits: number[]): number {
   if(bits.length === 0) { return -1 }
-  return bits.reduce((acc, x, i) => acc + ((2*x) ** i))
+  return bits.reduce(
+    (acc, x, i) => acc + ((2*x) ** i))
 }
 
 
