@@ -12,7 +12,7 @@ function maxSpacingKClustering(dataPath: string, k: number): number {
   let numClusters: number = distinctPoints.size
   const sortedEdges: Edge[] = edges.sort((a,b) => {return a.cost - b.cost})
 
-  //console.log(sortedEdges)
+  // console.log(sortedEdges)
 
   while(numClusters > k) {
     if(sortedEdges.length == 0) {
@@ -54,7 +54,7 @@ console.log(maxSpacingKClustering("data/clustering1.txt", 4))
 
 function computeBinaryClusteringMaxK(path: string): number {
   // Preprocessing
-  const hextets = processBinaryNodes(path).slice(0, 20)
+  const hextets = processBinaryNodes(path)
   let index = {
     a: new Map<number, Set<number>>(),
     b: new Map<number, Set<number>>(),
@@ -65,19 +65,16 @@ function computeBinaryClusteringMaxK(path: string): number {
   hextets.forEach((h: Hextet) => {
     index = indexHextet(index, h)
   })
-  console.log(hextets.length, index)
 
   // Compute the edges
-  const edges : Edge[] = []
+  let edges : Edge[] = []
   hextets.forEach(
     (h) => {
-      edges.concat(computeEdgesFromIndex(index, h))
+      edges = edges.concat(computeEdgesFromIndex(index, h))
   })
-  console.log(edges.length)
   const sortedEdges = edges.sort(
     (a, b) => {return a.cost - b.cost}
   )
-  console.log(sortedEdges.length)
 
   // Run the clustering algorithm, tracking how many clusters remain after processing all valid edges
   const unionFind = new UnionFind<number>(Array.from(hextets.map((h) => {return h.value})))
@@ -157,11 +154,10 @@ function computeEdgesFromIndex(index: HextetIndex, h: Hextet): Edge[] {
           candidates.add(v)
       })
   })
-  console.log(h, candidates)
 
   return Array.from(candidates.values())
     .filter(
-      (node: number) => {return h.value != node && isCloseEnough(h, node) })
+      (node: number) => {return isCloseEnough(h, node) })
     .map(
       (node: number) => { return {a: h.value, b: node, cost: hammingWeight(h.value ^ node)} })
 }
