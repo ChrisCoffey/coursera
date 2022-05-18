@@ -54,31 +54,19 @@ console.log(maxSpacingKClustering("data/clustering1.txt", 4))
 
 function computeBinaryClusteringMaxK(path: string): number {
   // Preprocessing
-  const hextets = processBinaryNodes(path)
-  let index = {
-    a: new Map<number, Set<number>>(),
-    b: new Map<number, Set<number>>(),
-    c: new Map<number, Set<number>>(),
-    d: new Map<number, Set<number>>()
-    }
-
-  hextets.forEach((h: Hextet) => {
-    index = indexHextet(index, h)
-  })
+  const nodesPresent: boolean[] = binaryNodeSet(path)
 
   // Compute the edges
-  let edges : Edge[] = []
-  hextets.forEach(
-    (h) => {
-      edges = edges.concat(computeEdgesFromIndex(index, h))
-  })
+  const edges : Edge[] = computeBinaryEdges(nodesPresent)
   const sortedEdges = edges.sort(
     (a, b) => {return a.cost - b.cost}
   )
+  const nodes : number[] = []
+  nodesPresent.forEach((v, i) => { if (v === true) { nodes.push(i)} })
 
   // Run the clustering algorithm, tracking how many clusters remain after processing all valid edges
-  const unionFind = new UnionFind<number>(Array.from(hextets.map((h) => {return h.value})))
-  let numClusters = hextets.length
+  const unionFind = new UnionFind<number>(nodes)
+  let numClusters = nodes.length
   sortedEdges.forEach((edge) => {
     if(unionFind.union(edge.a, edge.b)) { numClusters-- }
   })
@@ -88,19 +76,36 @@ function computeBinaryClusteringMaxK(path: string): number {
 
 function computeBinaryEdges(nodesPresent: boolean[]): Edge[] {
   // Set a bit in an array for each num, or use a Set<number>
+  const edges : Edge[] = []
   for(let i=0; i < nodesPresent.length; i++) {
-    //  compute all one and two bit permutations, and check if they're in the array
-    //  if there's a match, add an edge
+    const node = nodesPresent[i] === true
+    if (!node) { continue }
 
+    edges.push(...checkPermutations(nodesPresent, i))
   }
 
-  return []
+  return edges
 }
 
 function checkPermutations(nodesPresent: boolean[], x: number): Edge[] {
+  const edges: Edge[] = []
+  for(let i=0; i<24; i++){
+    // within distiance 1
+    const a = x ^ (1 << i)
+    if ( nodesPresent[a] === true) {
+      edges.push( {a: a, b: x, cost: 1} )
+    }
 
+    // within distance 2
+    for(let j=0; j<24; j++){
+      const b =  x ^ (1 << i) ^ (1 << j)
+      if ( nodesPresent[b] === true) {
+        edges.push({a: b, b: x, cost: 2})
+      }
+    }
+  }
 
-  return []
+  return edges
 }
 
 function binaryNodeSet(path: string): boolean[] {
