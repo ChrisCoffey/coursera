@@ -86,6 +86,35 @@ function computeBinaryClusteringMaxK(path: string): number {
   return numClusters
 }
 
+function computeBinaryEdges(nodesPresent: boolean[]): Edge[] {
+  // Set a bit in an array for each num, or use a Set<number>
+  for(let i=0; i < nodesPresent.length; i++) {
+    //  compute all one and two bit permutations, and check if they're in the array
+    //  if there's a match, add an edge
+
+  }
+
+  return []
+}
+
+function checkPermutations(nodesPresent: boolean[], x: number): Edge[] {
+
+
+  return []
+}
+
+function binaryNodeSet(path: string): boolean[] {
+  const rawLines = fs.readFileSync(path).toString().split("\n")
+  const result: boolean[] = []
+
+  rawLines.forEach( l => {
+    const littleEndianBits: number[] = l.split(" ").map(bit => Number.parseInt(bit))
+    const n: number = bitsToNumber(littleEndianBits)
+    result[n] = true
+  })
+
+  return result
+}
 
 
 type Hextet = {value: number, a: number, b: number, c: number, d: number}
