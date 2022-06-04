@@ -42,16 +42,21 @@ class MinHeap<A> {
   }
 
   private pushUp(x: A, index: number): void {
-    if(index === 0) { this.storage[index] = x}
+    if(index === 0) { this.storage[index] = x }
 
-    const parentNode = Math.floor(index / 2)
-    if(this.compare(x, this.storage[parentNode]) === CompareResult.Lt ) {
-      this.storage[index] = this.storage[parentNode]
-      this.pushUp(x, parentNode)
+    let idx = index
+    let parentNode = Math.floor(idx/ 2)
+    console.log(`${idx} ${parentNode} ${this.storage.length} ${this.storage[0]}`)
+
+    while(this.compare(x, this.storage[parentNode]) === CompareResult.Lt) {
+      this.storage[idx] = this.storage[parentNode]
+      idx = parentNode
+      parentNode = Math.floor(parentNode / 2)
+
+      if (idx === 0) { break }
     }
-    else {
-      this.storage[index] = x
-    }
+
+    this.storage[idx] = x
   }
 
   private pushDown(x: A, index: number): void {
@@ -88,7 +93,7 @@ class MinHeap<A> {
 
   private moveLastTo(idx: number): void {
     this.storage[idx] = this.storage[this.storage.length -1]
-    this.storage.length = this.storage.length - 1
+    this.storage.pop()
   }
 
   private left(index: number): number { return (index * 2) + 1 }
