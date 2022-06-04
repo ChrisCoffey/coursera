@@ -8,8 +8,8 @@ function compareByWeight(l: SymbolNode, r: SymbolNode): h.CompareResult {
   if(l === undefined || r === undefined) {console.trace()}
 
   if(l.weight > r.weight) { return h.CompareResult.Gt }
-  if(l.weight == r.weight) { return h.CompareResult.Eq }
-  return h.CompareResult.Lt
+  if(l.weight < r.weight) { return h.CompareResult.Lt }
+  return h.CompareResult.Eq
 }
 
 function calculateHuffmanCodeLengths(path: string): number[] {
@@ -30,7 +30,7 @@ function calculateHuffmanCodeLengths(path: string): number[] {
     const min = heap.extractMin()
     const next = heap.extractMin()
     if(min === undefined || next === undefined){
-      continue
+      break
     }
     const merged = mergeNodes(min, next)
 
@@ -66,4 +66,4 @@ function readSymbolWeights(path: string): number[] {
 }
 
 
-calculateHuffmanCodeLengths("data/huffman_codes.txt")
+console.log(calculateHuffmanCodeLengths("data/huffman_codes.txt"))

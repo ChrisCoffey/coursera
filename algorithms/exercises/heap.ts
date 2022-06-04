@@ -12,13 +12,19 @@ class MinHeap<A> {
     this.compare = compare
   }
 
+  public size(): number {
+    return this.storage.length
+  }
+
   public extractMin(): A | undefined {
     if(this.storage.length === 0) { return undefined }
 
     const min = this.storage[0]
 
     this.moveLastToRoot()
-    this.pushDown(this.storage[0], 0)
+    if(this.storage.length > 0) {
+      this.pushDown(this.storage[0], 0)
+    }
 
     return min
   }
@@ -46,7 +52,6 @@ class MinHeap<A> {
 
     let idx = index
     let parentNode = Math.floor(idx/ 2)
-    console.log(`${idx} ${parentNode} ${this.storage.length} ${this.storage[0]}`)
 
     while(this.compare(x, this.storage[parentNode]) === CompareResult.Lt) {
       this.storage[idx] = this.storage[parentNode]
