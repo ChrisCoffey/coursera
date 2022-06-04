@@ -13,18 +13,14 @@ function compareByWeight(l: SymbolNode, r: SymbolNode): h.CompareResult {
 }
 
 function calculateHuffmanCodeLengths(path: string): number[] {
-  console.log("starting")
   const symbolWeights = readSymbolWeights(path)
   const codeLengths: number[] = []
   const heap = new h.MinHeap<SymbolNode>(compareByWeight)
-  console.log("prepared")
 
   symbolWeights.forEach((weight, index) => {
     heap.insert({weight: weight, indices: [index]})
     codeLengths[index] = 0
   })
-  console.log("heap initialized")
-
 
   while(heap.findMin() !== undefined) {
     const min = heap.extractMin()
@@ -65,5 +61,31 @@ function readSymbolWeights(path: string): number[] {
   return rawLines.map((x) => { return parseInt(x) })
 }
 
+function max(xs: number[]) : number | undefined {
+  if (xs.length === 0) { return undefined }
+  let max: number = Number.NEGATIVE_INFINITY
 
-console.log(calculateHuffmanCodeLengths("data/huffman_codes.txt"))
+  xs.forEach((x) => {
+    if(x > max) {
+      max = x
+    }
+  })
+
+  return max
+}
+
+function min(xs: number[]) : number | undefined {
+  if (xs.length === 0) { return undefined }
+  let min: number = Number.POSITIVE_INFINITY
+
+  xs.forEach((x) => {
+    if(x < min ) {
+      min = x
+    }
+  })
+
+  return min
+}
+
+const codeLengths : number[] = calculateHuffmanCodeLengths("data/huffman_codes.txt")
+console.log(min(codeLengths), max(codeLengths))

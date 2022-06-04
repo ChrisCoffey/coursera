@@ -23,7 +23,7 @@ class MinHeap<A> {
 
     this.moveLastToRoot()
     if(this.storage.length > 0) {
-      this.pushDown(this.storage[0], 0)
+      this.pushDown(0)
     }
 
     return min
@@ -40,7 +40,7 @@ class MinHeap<A> {
     if (idx < 0) return
 
     this.moveLastTo(idx)
-    this.pushDown(this.storage[idx], idx)
+    this.pushDown(idx)
   }
 
   public insert(x: A) : void {
@@ -64,31 +64,29 @@ class MinHeap<A> {
     this.storage[idx] = x
   }
 
-  private pushDown(x: A, index: number): void {
+  // Also known as MinHeapify. This algorithm maintains the heap property on a subtree by swapping
+  // the smallest child with the root of the tree, then recursing on the swapped subtree. The node
+  // that was pushed down becomes the root of the next subtree and the algorithm repeats. Pretty
+  // cool algorithm!
+  private pushDown(index: number): void {
     const leftChild = this.left(index)
     const rightChild = this.right(index)
-    const smallestChild = this.storage[leftChild] < this.storage[rightChild] ? leftChild : rightChild
+    let smallest = index
 
-    if(this.leafNode(index)){
-      this.storage[index] = x
+    if (leftChild < this.size() &&
+        this.compare(this.storage[leftChild], this.storage[smallest]) === CompareResult.Lt) {
+      smallest = leftChild
     }
-    else if (leftChild == this.storage.length){
-      if(this.storage[leftChild] < x){
-        this.storage[index] = this.storage[leftChild]
-        this.storage[leftChild] = x
-      }
-      else {
-        this.storage[index] = x
-      }
+    if(rightChild < this.size() &&
+        this.compare(this.storage[rightChild], this.storage[smallest]) === CompareResult.Lt) {
+      smallest = rightChild
     }
-    else { // internal node
-      if(this.storage[smallestChild] < x) {
-        this.storage[index] = this.storage[smallestChild]
-        this.pushDown(x, smallestChild)
-      }
-      else {
-        this.storage[index] = x
-      }
+    if (smallest !== index) {
+      const x = this.storage[index]
+      this.storage[index] = this.storage[smallest]
+      this.storage[smallest] = x
+
+      this.pushDown(smallest)
     }
   }
 
