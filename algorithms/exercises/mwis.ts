@@ -1,12 +1,10 @@
 import * as h from './heap'
 import * as fs from 'fs'
 
-function computeMWIS(path: string): number[] {
-  const values = parseMWIS(path)
-
+function computeMWIS(values: number[]): number[] {
   const mwisToN : number[] = []
   // 1 2 3
-  for(let i =0; i < values.length; i++) {
+  for(let i = 0; i < values.length; i++) {
     if(i === 0) {
       mwisToN[i] = values[i]
     }
@@ -41,22 +39,41 @@ function take<A>(n: number, xs: A[]): A[] {
   return res
 }
 
-function check(indices: number[], mwis: number[]): boolean[] {
-  const res : boolean[] = []
-  let n = res.length - 1
-  for(let i=mwis.length -1; i > 0; i--) {
-    if(!indices.includes(i)) { continue }
+function check(indices: number[], mwis: number[], values: number[]): boolean[] {
+  const reconstructed: boolean[] = []
 
-    res[n] = (mwis[i-1] != mwis[i])
-    n--
+  let i = mwis.length - 1
+  while(i >= 0) {
+    // This edge cased tripped me up w/ wrapping around the array to the start again...
+    if(i==0) {
+      reconstructed[i] = true
+      i--
+      continue
+    }
+
+    if(mwis[i] == mwis[i-1]) {
+      i--
+    } else {
+      reconstructed[i] = true
+      i-=2
+    }
+
   }
+
+  const res : boolean[] = []
+  indices.forEach((i,idx) => {
+    res[idx] = reconstructed[i-1]
+    console.log([i, idx, reconstructed[i-1]])
+  })
+
 
   return res
 }
 
-const mwis = computeMWIS("data/mwis.txt")
+const values = parseMWIS("data/mwis.txt")
+const mwis = computeMWIS(values)
 const indicesToCheck = [1,2,3,4,17,117,517,997]
 
 take(10, mwis).forEach((x) => console.log(x))
 
-console.log(check(indicesToCheck, mwis))
+console.log(check(indicesToCheck, mwis, values))
