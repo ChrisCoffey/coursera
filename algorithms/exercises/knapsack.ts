@@ -33,6 +33,45 @@ function iterative_knapsack(problem: Problem): number {
   return A[problem.items.length-1][problem.knapsackSize]
 }
 
+function item_centric_knapsack(problem: Problem): number {
+  const seen: number[] = []
+
+  // Iterate over items, adding each one into arr, and adding the item to any
+  // previously seen items in arr, storing the new value at a smaller weight
+  // Should be O(n^2), but consume less memory
+  // Basically produces all permutations of items that could fit in knapsack, then
+  // walk over that list in reverse order and take the max value closes to the knapsackSize
+
+
+  for (let i = 1; i < problem.items.length; i++) {
+    const item = problem.items[i]
+
+    if(item.weight > problem.knapsackSize) { continue }
+
+
+    const updates : number[] = []
+    seen.forEach((seenValue, seenWeight) => {
+      const wPrime = seenWeight + item.weight
+      const vPrime = seenValue + item.value
+
+      if(wPrime <= problem.knapsackSize && (seen[wPrime] || 0) < vPrime) {
+        updates[wPrime] = vPrime
+      }
+
+    })
+
+    updates.forEach((x,i) =>{ seen[i] = x })
+
+    const x = seen[item.weight]
+    if( x === undefined) { seen[item.weight] = item.value }
+  }
+
+  let maximum = 0
+  seen.forEach((x) => { if(x > maximum) { maximum = x} })
+
+  return maximum
+}
+
 function parse_knapsack(path: string): Problem {
   const fileBuffer = fs.readFileSync(path)
   const rawLines = fileBuffer.toString().split("\n")
@@ -58,3 +97,6 @@ function parse_knapsack(path: string): Problem {
 
 const data_1 = parse_knapsack("data/knapsack.txt")
 console.log(iterative_knapsack(data_1))
+
+const data_2 = parse_knapsack("data/knapsack_big.txt")
+console.log(item_centric_knapsack(data_2))
