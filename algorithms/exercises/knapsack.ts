@@ -72,6 +72,89 @@ function item_centric_knapsack(problem: Problem): number {
   return maximum
 }
 
+function rec_table_knapsack(problem: Problem): number {
+  const A: number[][] = []
+  for(let i = 0; i < problem.items.length; i++) {
+    A[i] = new Array(problem.knapsackSize)
+  }
+
+  let steps = 0
+  // Recursive function to calculate the table
+  function run(i: number, w: number): number {
+    steps++;
+    // If either index hits 0, we're at the base case and should stop recursion
+    if (i == 0 || w <= 0) {
+      return 0
+    }
+
+    // If the cell to the left of the focused cell hasn't been calculated, calculate it
+    if(A[i - 1][w] === undefined) {
+      A[i - 1][w] = run(i-1, w)
+    }
+
+    // standard "shift value right" step when the focused item doesn't fit in knapsack
+    if(problem.items[i].weight > w) {
+      A[i][w] = A[i-1][w]
+    } else {
+      // Haven't calculated a cell lower down in the table yet, so calcualte it
+      if(A[i - 1][w- problem.items[i].weight] === undefined) {
+        A[i - 1][w- problem.items[i].weight] = run(i - 1, w- problem.items[i].weight )
+      }
+
+      // Standard value "choice" step between cell to the left or adding current value to a cell lower in the table
+      const prior = A[i - 1][w]
+      const including_current = A[i -1][w - problem.items[i].weight] + problem.items[i].value
+      A[i][w] = Math.max(prior, including_current)
+    }
+
+    return A[i][w]
+  }
+
+  const res = run(problem.items.length - 1, problem.knapsackSize)
+  console.log(steps)
+
+  return res
+}
+
+function rec_knapsack(problem: Problem): number {
+  const seen: Map<number, number> = new Map()
+
+  // Sort items based on weight
+  const items = problem.items.sort((l, r) => {
+    if(l.weight < r.weight) { return 1 }
+    if(l.weight > r.weight) { return -1 }
+    else { return 0 }
+  })
+
+  //console.log(items)
+
+  function run(sz: number, index: number): number {
+    if(index >= items.length || sz <= 0) { return 0 }
+    const x = seen.get(sz)
+    if(x !== undefined) {
+      return x
+    }
+
+    const item: Item = items[index]
+    if (item.weight > sz) { return 0 }
+
+    const val = Math.max(
+      run(sz - item.weight, index+1) + item.value,
+      run(sz, index+1)
+    )
+    //console.log(`(${item.weight}, ${item.value}) ${sz} ${val}`)
+
+    seen.set(sz, val)
+
+    return val
+  }
+
+  let res = run(problem.knapsackSize, 0)
+  //console.log(seen)
+
+  return res
+}
+
 function parse_knapsack(path: string): Problem {
   const fileBuffer = fs.readFileSync(path)
   const rawLines = fileBuffer.toString().split("\n")
@@ -95,8 +178,14 @@ function parse_knapsack(path: string): Problem {
 }
 
 
+const data_test = parse_knapsack("data/knapsack.test")
 const data_1 = parse_knapsack("data/knapsack.txt")
-console.log(iterative_knapsack(data_1))
+console.log(iterative_knapsack(data_test))
 
 const data_2 = parse_knapsack("data/knapsack_big.txt")
-console.log(item_centric_knapsack(data_2))
+console.log(item_centric_knapsack(data_test))
+
+console.log(rec_table_knapsack(data_test))
+console.log(rec_knapsack(data_test))
+
+
