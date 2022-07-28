@@ -116,43 +116,73 @@ function rec_table_knapsack(problem: Problem): number {
   return res
 }
 
-function rec_knapsack(problem: Problem): number {
-  const seen: Map<number, number> = new Map()
+interface HashMap {
+  [key: string] : number
+}
 
-  // Sort items based on weight
-  const items = problem.items.sort((l, r) => {
-    if(l.weight < r.weight) { return 1 }
-    if(l.weight > r.weight) { return -1 }
-    else { return 0 }
-  })
+// Far too slow
+function rec_knapsack(problem: Problem): number {
+  const seen: HashMap = {}
+  const items = problem.items
 
   //console.log(items)
 
+  let ticks: number = 0
+  let hits: number = 0
   function run(sz: number, index: number): number {
-    if(index >= items.length || sz <= 0) { return 0 }
-    const x = seen.get(sz)
+    ticks++
+    if(index < 1 || sz <= 0) {
+      console.trace(`${sz}, ${index}, ticks: ${ticks}`)
+      return 0
+    }
+
+    if (hits % 1000000 === 0 ) { console.log("hit")}
+    const key = `${sz},${index}`
+    const x = seen[key]
     if(x !== undefined) {
+      hits++
       return x
     }
 
     const item: Item = items[index]
-    if (item.weight > sz) { return 0 }
 
-    const val = Math.max(
-      run(sz - item.weight, index+1) + item.value,
-      run(sz, index+1)
-    )
+    const val = item.weight > sz
+        ? run(sz, index-1)
+        : Math.max( run(sz - item.weight, index-1) + item.value,   run(sz, index-1) )
+
     //console.log(`(${item.weight}, ${item.value}) ${sz} ${val}`)
 
-    seen.set(sz, val)
+    seen[key] = val
 
     return val
   }
 
-  let res = run(problem.knapsackSize, 0)
+  let res = run(problem.knapsackSize, items.length -1)
   //console.log(seen)
 
   return res
+}
+
+function two_col_knapsack(problem: Problem): number {
+  // Work bottoms-up, keeping only the most recent two columns in the table
+  let l : number[] = new Array(problem.knapsackSize+1).fill(0)
+  let r : number[] = []
+  const xs = problem.items
+
+  for(let i = 1; i < xs.length; i++) {
+    for(let w = 0; w <= problem.knapsackSize; w++) {
+      if(xs[i].weight > w) {
+        r[w] = l[w]
+      }
+      else {
+        r[w] = Math.max(l[w - xs[i].weight] + xs[i].value, l[w])
+      }
+    }
+    l = r
+    r = []
+  }
+
+  return l[problem.knapsackSize]
 }
 
 function parse_knapsack(path: string): Problem {
@@ -185,7 +215,7 @@ console.log(iterative_knapsack(data_test))
 const data_2 = parse_knapsack("data/knapsack_big.txt")
 console.log(item_centric_knapsack(data_test))
 
-console.log(rec_table_knapsack(data_test))
-console.log(rec_knapsack(data_test))
+console.log(rec_table_knapsack(data_1))
+console.log(two_col_knapsack(data_2))
 
 
