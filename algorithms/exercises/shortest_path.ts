@@ -14,6 +14,8 @@ type Graph = {
   inboundEdges: Edges
 }
 
+
+
 type SingleSourceShortestPaths = {
   source: Vertex,
   paths:  number[]
@@ -72,28 +74,42 @@ function djikstras(source: Vertex, graph: Graph): SingleSourceShortestPaths | un
 
 
 function loadGraph(path: string): Graph {
+  const rawLines = fs.readFileSync(path).toString().split("\n")
+  rawLines.shift()
+  const edges: WeightedEdge[] = rawLines.map((str) => {
+    const s = str.split(" ")
+    return {start: parseInt(s[0]), end: parseInt(s[1]), weight: parseInt(s[2]) }
+  })
+  edges.pop()
 
+  const inbound: Edges = {}
+  const outbound: Edges = {}
+  const vertices: Vertex[] = []
+  edges.forEach((edge) => {
+    const inb = (inbound[edge.end] || [])
+    inb.push(edge)
+    inbound[edge.end] = inb
+
+    const out = (outbound[edge.start] || [])
+    out.push(edge)
+    outbound[edge.start] = out
+
+    vertices.push(edge.start, edge.end)
+  })
+
+  return {
+    vertices: [... new Set<Vertex>(vertices)],
+    inboundEdges: inbound,
+    outboundEdges: outbound,
+    edges: edges
+  }
 }
 
 
 
-const testGraph = {
-  vertices: [0,1,2,3,4],
-  edges: [
-    {start: 0, end: 1, weight: 6},
-    {start: 0, end: 4, weight: 7},
-    {start: 1, end: 4, weight: 8},
-    {start: 1, end: 2, weight: 5},
-    {start: 1, end: 3, weight: -4},
-    {start: 2, end: 1, weight: -2},
-    {start: 3, end: 2, weight: 7},
-    {start: 3, end: 0, weight: 2},
-    {start: 4, end: 2, weight: -3},
-    {start: 4, end: 3, weight: 9},
-  ],
-  outboundEdges: {},
-  inboundEdges: {},
-}
+const testGraph = loadGraph("data/g_test.txt")
+console.log(testGraph)
+
 
 const positiveTestGraph = {
   vertices: [0,1,2,3,4],
