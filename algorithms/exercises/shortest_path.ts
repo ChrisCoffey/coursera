@@ -1,3 +1,4 @@
+import 'source-map-support/register'
 import * as fs from 'fs'
 import * as heap from './heap'
 
@@ -101,6 +102,7 @@ function djikstras(source: Vertex, graph: Graph): SingleSourceShortestPaths | un
 }
 
 function johnsons(graph: Graph): SingleSourceShortestPaths[] {
+  const vertexWeights : number[] = []
   // Add an artificial vertex to each graph with a 0-weight edge to all other vertices
   // Run Bellman-Ford to calculate shortest paths from artificial node to all vertices
   // These shortest paths become vertex weights
@@ -114,20 +116,20 @@ function johnsons(graph: Graph): SingleSourceShortestPaths[] {
 function floydWarshall(graph: Graph): SingleSourceShortestPaths[] | undefined {
   // Convert to adjacency matrix representation to save space & speed up code
   let adjacencyMatrix : number[][] = []
-  for(let n = 0; n < graph.vertices.length; n++) {
+  for(let n = 1; n <= graph.vertices.length; n++) {
     adjacencyMatrix[n] = new Array(graph.vertices.length).fill(Infinity)
   }
-  graph.edges.forEach((e) => {
-    adjacencyMatrix[e.start][e.end] = e.weight
-  })
   graph.vertices.forEach((v) => {
     adjacencyMatrix[v][v] = 0
   })
+  graph.edges.forEach((e) => {
+    adjacencyMatrix[e.start][e.end] = e.weight
+  })
 
   // Considers paths through an intermediate vertex, which must by definition be shortest
-  for(let k = 0; k < graph.vertices.length; k++) {
-    for(let i= 0; i < graph.vertices.length; i++) {
-      for(let j = 0; j < graph.vertices.length; j++) {
+  for(let k = 1; k <= graph.vertices.length; k++) {
+    for(let i= 1; i <= graph.vertices.length; i++) {
+      for(let j = 1; j <= graph.vertices.length; j++) {
         const distanceThroughK = adjacencyMatrix[i][k] + adjacencyMatrix[k][j]
         if(distanceThroughK < adjacencyMatrix[i][j]) {
           adjacencyMatrix[i][j] = distanceThroughK
@@ -145,11 +147,33 @@ function floydWarshall(graph: Graph): SingleSourceShortestPaths[] | undefined {
   })
 
   // Detect negative cycle
-  for(let n=0; n < graph.vertices.length; n++) {
+  for(let n=1; n <= graph.vertices.length; n++) {
     if(adjacencyMatrix[n][n] < 0 ) { return undefined }
   }
 
   return result
+}
+
+function shortestPaths(graphs: Graph[]): void {
+  const shortestPathWeight = (paths: SingleSourceShortestPaths[]) => {
+    let shortest = Infinity
+    paths.forEach((source) => {
+      source.paths.forEach((p) => {
+        if(p < shortest) { shortest = p }
+      })
+    })
+
+    return shortest
+  }
+
+  console.log("starting")
+  const paths = graphs.map((g) => {
+    const shortestPaths = floydWarshall(g) || []
+    console.log("after FW")
+    return shortestPathWeight(shortestPaths)
+  })
+
+  console.log(paths)
 }
 
 
@@ -190,10 +214,9 @@ function loadGraph(path: string): Graph {
 const testGraph = loadGraph("data/g_test.txt")
 
 const positiveTestGraph = loadGraph("data/g_test_pos.txt")
-console.log(positiveTestGraph)
 
-console.log(bellmanFord(0, testGraph))
-console.log(bellmanFord(0, positiveTestGraph))
-console.log(djikstras(0, positiveTestGraph))
+const graph1 = loadGraph("data/g1.txt")
+const graph2 = loadGraph("data/g2.txt")
+const graph3 = loadGraph("data/g3.txt")
 
-console.log(floydWarshall(testGraph))
+shortestPaths([graph1, graph2, graph3])
