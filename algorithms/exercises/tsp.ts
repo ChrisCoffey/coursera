@@ -16,7 +16,7 @@ function normalizePoints(points: Point[]): Point[] {
 }
 
 // This is Kernighan's algorithm
-function numSetBits(n: number): number {
+export function numSetBits(n: number): number {
   let setBits = 0
   let x = n
   while(x > 0) {
@@ -27,7 +27,7 @@ function numSetBits(n: number): number {
   return setBits
 }
 
-function setBits(n: number): number[] {
+export function setBits(n: number): number[] {
   const res = []
 
   let x = n
@@ -40,7 +40,21 @@ function setBits(n: number): number[] {
   return res
 }
 
-function subsets<a>(xs: a[], subsetSize: number): a[][] {
+export function factorial(n: number): number {
+  let x = n
+  for(let i=n-1; i>0; i--) {
+    x *= i
+  }
+  return x
+}
+
+export function subsets<a>(xs: a[], subsetSize: number): a[][] {
+  if(subsetSize === 1) {
+    return xs.map((x) => { return [x] })
+  } else if (subsetSize == xs.length) {
+    return [xs]
+  }
+
   const result: a[][] = []
 
   for(let x=0; x < (2 ** (xs.length)) -1; x++) {
@@ -54,7 +68,25 @@ function subsets<a>(xs: a[], subsetSize: number): a[][] {
 }
 
 function dynamicTSPLength(points: Point[]): number {
+  const start: Point = points[0]
+  const paths: Map<[Point[], Point], number> = new Map()
 
+  for(let m = 2; m < points.length; m++) {
+    const subs = subsets(points, m).filter((xs) => { return xs.includes(start) } )
+
+    subs.forEach((xs) => {
+      for(const j of xs) {
+        if( j === start ) { continue }
+
+        // loop over all of the elements of xs, except for j. Find the minimum distance to j for this subset
+        const withoutJ = xs.filter((x) => { return x != j } )
+        const distances: number[] = withoutJ.map( (k) => { return  (paths.get([withoutJ, j]) || Infinity) + euclideanDistance(k, j)})
+        paths.set([xs, j], Math.min(...distances))
+      }
+    })
+  }
+
+  // extract minimum tour from the points
   return 42
 }
 
