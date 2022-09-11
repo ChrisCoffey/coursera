@@ -2,6 +2,44 @@ import * as fs from 'fs'
 
 type Point = {x: number, y: number}
 
+function lexComparePoints(a: Point, b: Point): number {
+  if(a.x < b.x) {
+    return -1
+  } else if (a.x > b.x) {
+    return 1
+  } else if (a.x == b.x && a.y < b.y) {
+    return -1
+  } else if (a.x == b.x && a.y > b.y){
+    return 1
+  } else {
+    return 0
+  }
+}
+
+function angleComparePoints(p: Point) : (a: Point, b: Point) => number {
+  return (a: Point, b: Point) => {
+    const angleA = findAngle(p, a)
+    const angleB = findAngle(p, b)
+
+    if(angleA < angleB) {
+      return -1
+    } else if (angleA > angleB) {
+      return 1
+    } else {
+      return 0
+    }
+  }
+}
+
+function encodePoints (points: Point[]): string {
+  let str = ""
+  points.sort(lexComparePoints).forEach((p) => {
+    str += `(${p.x}, ${p.y}),`
+  })
+
+  return str
+}
+
 function euclideanDistance(a: Point, b: Point): number {
   return Math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2)
 }
@@ -48,31 +86,44 @@ export function factorial(n: number): number {
   return x
 }
 
-export function subsets<a>(xs: a[], subsetSize: number): a[][] {
+export function subsets<a>(xs: a[], subsetSize: number, pred?: (x: number) => boolean ): a[][] {
   if(subsetSize === 1) {
     return xs.map((x) => { return [x] })
   } else if (subsetSize == xs.length) {
     return [xs]
   }
+  const f = pred || ((x: number) => { return true })
 
   const result: a[][] = []
 
   for(let x=0; x < (2 ** (xs.length)) -1; x++) {
     if(numSetBits(x) == subsetSize) {
-      const subSet = setBits(x).map( (i) => {return xs[i] })
-      result.push(subSet)
+      let valid = false
+      const subSet = setBits(x).map( (i) => {
+        valid = f(i)
+        return xs[i]
+      })
+      if(valid) {
+        result.push(subSet)
+      }
     }
   }
 
   return result
 }
 
+interface Paths {
+  [index: string]: number
+}
+
 function dynamicTSPLength(points: Point[]): number {
   const start: Point = points[0]
-  const paths: Map<[Point[], Point], number> = new Map()
+  const paths: Paths = {}
+  const pred =  (x: number) => { return x === 0 }
 
   for(let m = 2; m < points.length; m++) {
-    const subs = subsets(points, m).filter((xs) => { return xs.includes(start) } )
+    const subs = subsets(points, m, pred)
+    console.log(`Exploring paths of length ${m}. There are ${subs.length} subsets.`)
 
     subs.forEach((xs) => {
       for(const j of xs) {
@@ -80,15 +131,77 @@ function dynamicTSPLength(points: Point[]): number {
 
         // loop over all of the elements of xs, except for j. Find the minimum distance to j for this subset
         const withoutJ = xs.filter((x) => { return x != j } )
-        const distances: number[] = withoutJ.map( (k) => { return  (paths.get([withoutJ, j]) || Infinity) + euclideanDistance(k, j)})
-        paths.set([xs, j], Math.min(...distances))
+        const distances: number[] = withoutJ.map( (k) => {
+          return  (paths[encodePoints(withoutJ) + k.toString()] || Infinity) + euclideanDistance(k, j)
+        })
+
+        paths[encodePoints(xs) + j.toString()] = Math.min(...distances)
       }
     })
   }
 
-  // extract minimum tour from the points
+  // Find the minimum length tour
+  const finalHops = points.slice(1).map((point) => {
+    const pathLength = paths[encodePoints(points) + point.toString()] || Infinity
+    return pathLength + euclideanDistance(point, start)
+  })
+
+  return Math.min(...finalHops)
+}
+
+type ConvexHull = Point[]
+
+export function grahamScan(points: Point[]): ConvexHull {
+  let p: Point = {x: Infinity, y: Infinity}
+  points.forEach((point) => {
+    if(point.y < p.y) {
+      p = point
+    } else if (point.y == p.y && point.x > p.x) {
+      p = point
+    }
+  })
+
+  const sortedByAngle: Point[] = points.sort(angleComparePoints(p))
+
+  const hull: Point[] = []
+  for(let i = 0; i < sortedByAngle.length; i++) {
+    if(i <= 1) {
+      hull.push(sortedByAngle[i])
+      continue
+    }
+
+    // cross product is < 0 during a right-hand turn
+    while(hull.length > 1 && crossProduct(hull[hull.length -2], hull[hull.length - 1], sortedByAngle[i]) < 0) {
+      // During a right-hand turn, the last element in the stack needs to be discarded because it lies inside
+      // the convex hull
+      hull.pop()
+    }
+    hull.push(sortedByAngle[i])
+  }
+
+  return hull
+}
+
+export function crossProduct(a: Point, b: Point, c: Point): number {
+  return ((b.x - a.x) * (c.y - a.y)) - ((b.y - a.y) * (c.x - a.x))
+}
+
+// little bit of trig here
+export function findAngle(a: Point, b: Point): number {
+  const opposite = b.y - a.y
+  const adjacent = b.x - a.x
+  const hypotenuse = Math.sqrt(opposite**2 + adjacent**2)
+  return Math.asin(opposite / hypotenuse)
+}
+
+function convexHullTSPLength(points: Point[]): number {
+  const convexHull = grahamScan(points)
+
+
   return 42
 }
+
+
 
 
 function loadMap(path: string): Point[] {
@@ -107,17 +220,9 @@ function loadMap(path: string): Point[] {
   return points
 }
 
-function prettyPrintPoints(points: Point[]): string {
-  let str = ""
-  points.forEach((p) => {
-    str += `(${p.x}, ${p.y}),`
-  })
+const points = loadMap("data/tsp.txt")
+console.log(points)
 
-  return str
-}
-
-console.log(loadMap("data/tsp.txt"))
+console.log(grahamScan(points))
 
 
-console.log(numSetBits(3), setBits(3))
-console.log(subsets([1,2,3,4], 4))
