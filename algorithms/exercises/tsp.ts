@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import internal from 'stream'
 
 type Point = {x: number, y: number}
 
@@ -194,11 +195,68 @@ export function findAngle(a: Point, b: Point): number {
   return Math.asin(opposite / hypotenuse)
 }
 
-function convexHullTSPLength(points: Point[]): number {
-  const convexHull = grahamScan(points)
+type InsertionPoint = {i: Point, j: Point, r: Point}
+function convexHullTSPLength(points: Point[]): Point[] {
+  const path = grahamScan(points)
+  const findInternalPoints = () => {
+    return points.filter((point) => { return !path.includes(point) })
+  }
 
+  const pathDelta = (i: Point, next: Point, r: Point) => {
+    const currentLength = euclideanDistance(i, next)
+    const costIR = euclideanDistance(i, r)
+    const costRNext = euclideanDistance(r, next)
+    return (costIR + costRNext) - currentLength
+  }
 
-  return 42
+  while(path.length != points.length) {
+    console.log("step", path.length)
+    const internalPoints: Point[] = findInternalPoints()
+
+    // Calculate the distance added to the path length by inserting pointR inbetwen
+    // i and i+1 in the path.
+    const minimalInsertions: InsertionPoint[] = internalPoints.map( (pointR) => {
+      let minStart: number = 0
+      let minCost: number = Infinity
+      for(let i = 0; i< path.length; i++) {
+        const next: number = i == path.length - 1 ? 0 : i + 1
+        // The actual path length delta calculations
+        const costIRNext = pathDelta(path[i], path[next], pointR)
+
+        // Keep track of the shortest "extra length" across all insertion points
+        if(costIRNext < minCost) {
+          minCost = costIRNext
+          minStart = i
+        }
+      }
+
+      return {i: path[minStart], r: pointR, j: path[minStart == path.length -1 ? 0 : (minStart + 1)]}
+    })
+
+    let minExtraLength = Infinity
+    let r: InsertionPoint = {i: path[0], j: path[0], r: path[0]} // TODO figure out how to improve compiler-speak
+    minimalInsertions.forEach((insertion) => {
+      console.log(insertion)
+      const deltaRatio =
+        (euclideanDistance(insertion.i, insertion.r) + euclideanDistance(insertion.r, insertion.j)) /
+        euclideanDistance(insertion.i, insertion.j)
+
+      if(deltaRatio < minExtraLength) {
+        r = insertion
+      }
+    })
+
+    const indexI = path.findIndex((x) => { return x === r.i} )
+    let shifted = path[indexI + 1]
+    path[indexI + 1] = r.r
+    for(let n = indexI + 2; n < path.length; n++) {
+      const x = shifted
+      shifted = path[n]
+      path[n] = x
+    }
+  }
+
+  return path
 }
 
 
@@ -224,5 +282,6 @@ const points = loadMap("data/tsp.txt")
 console.log(points)
 
 console.log(grahamScan(points))
+console.log(convexHullTSPLength(points))
 
 
