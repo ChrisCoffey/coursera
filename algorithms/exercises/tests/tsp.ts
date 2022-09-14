@@ -45,3 +45,53 @@ describe("TSP#subsets", function() {
   })
 })
 
+describe("TSP#perimeter", function() {
+  it("returns 0 for an empty array", function() {
+    expect(tsp.perimeter([])).to.equal(0)
+  })
+
+  it("returns 0 for an array of length 1", function() {
+    expect(tsp.perimeter([{x: 1, y: 1}])).to.equal(0)
+  })
+
+  it("returns perimeter for a simple shape", function() {
+    const points = [
+      {x: 0, y: 0},
+      {x: 0, y: 1},
+      {x: 1, y: 1},
+      {x: 1, y: 0}
+    ]
+
+    expect(tsp.perimeter(points)).to.equal(4)
+  })
+})
+
+describe("TSP#findAngle", function() {
+  it("returns 0 for horizontal line", function () {
+    expect(tsp.findAngle({x: 0, y: 0}, {x: 1, y: 0})).to.equal(0)
+  })
+
+  it("Handles very similar angles properly", function() {
+    const p = {x: 27166.6667, y: 9833.3333}
+    const a = {x: 27233.3333, y: 10450}
+
+    expect(Math.floor(tsp.findAngle(p, a) * 1000)).to.equal(83829)
+  })
+})
+
+describe("TSP#grahamScan", function() {
+  it("solves case 1", function() {
+    const points = [
+      {x: 1, y: 1},
+      {x: 0, y: 1},
+      {x: 0, y: 0},
+      {x: 1, y: 0},
+      {x: 0.5, y: 0.1}
+    ]
+
+    const hull = tsp.grahamScan(points)
+    expect(tsp.perimeter(hull)).to.equal(4)
+  })
+
+
+})

@@ -150,9 +150,23 @@ function dynamicTSPLength(points: Point[]): number {
   return Math.min(...finalHops)
 }
 
+// Given an array of points describing a polygon, return their perimeter
+export function perimeter(points: Point[]): number {
+  points.push(points[0])
+
+  let accumulator = 0
+  for(let i = 0; i< points.length - 1; i++) {
+    accumulator += euclideanDistance(points[i], points[i+1])
+  }
+
+  return accumulator
+}
+
 type ConvexHull = Point[]
 
 export function grahamScan(points: Point[]): ConvexHull {
+  // Find the starting point, which should have the smallest y.
+  // In the event of a tie, choose the point with the largest x
   let p: Point = {x: Infinity, y: Infinity}
   points.forEach((point) => {
     if(point.y < p.y) {
@@ -162,7 +176,9 @@ export function grahamScan(points: Point[]): ConvexHull {
     }
   })
 
+  // Sort points by angle relative to `p`
   const sortedByAngle: Point[] = points.sort(angleComparePoints(p))
+  console.log(sortedByAngle)
 
   const hull: Point[] = []
   for(let i = 0; i < sortedByAngle.length; i++) {
@@ -189,15 +205,16 @@ export function crossProduct(a: Point, b: Point, c: Point): number {
 
 // little bit of trig here
 export function findAngle(a: Point, b: Point): number {
-  const opposite = b.y - a.y
-  const adjacent = b.x - a.x
-  const hypotenuse = Math.sqrt(opposite**2 + adjacent**2)
-  return Math.asin(opposite / hypotenuse)
+  const deltaY = b.y - a.y
+  const deltaX = b.x - a.x
+  const theta = Math.atan2(deltaY, deltaX)
+  return theta * 180 / Math.PI
 }
 
 type InsertionPoint = {i: Point, j: Point, r: Point}
 function convexHullTSPLength(points: Point[]): Point[] {
   const path = grahamScan(points)
+  console.log("initial convex hull", path)
   const findInternalPoints = () => {
     return points.filter((point) => { return !path.includes(point) })
   }
@@ -210,7 +227,6 @@ function convexHullTSPLength(points: Point[]): Point[] {
   }
 
   while(path.length != points.length) {
-    console.log("step", path.length)
     const internalPoints: Point[] = findInternalPoints()
 
     // Calculate the distance added to the path length by inserting pointR inbetwen
@@ -236,7 +252,6 @@ function convexHullTSPLength(points: Point[]): Point[] {
     let minExtraLength = Infinity
     let r: InsertionPoint = {i: path[0], j: path[0], r: path[0]} // TODO figure out how to improve compiler-speak
     minimalInsertions.forEach((insertion) => {
-      console.log(insertion)
       const deltaRatio =
         (euclideanDistance(insertion.i, insertion.r) + euclideanDistance(insertion.r, insertion.j)) /
         euclideanDistance(insertion.i, insertion.j)
@@ -260,8 +275,6 @@ function convexHullTSPLength(points: Point[]): Point[] {
 }
 
 
-
-
 function loadMap(path: string): Point[] {
   const rawLines = fs.readFileSync(path).toString().split("\n")
   const count = rawLines.shift()
@@ -282,6 +295,6 @@ const points = loadMap("data/tsp.txt")
 console.log(points)
 
 console.log(grahamScan(points))
-console.log(convexHullTSPLength(points))
+//console.log(convexHullTSPLength(points))
 
 
