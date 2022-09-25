@@ -32,6 +32,21 @@ function angleComparePoints(p: Point) : (a: Point, b: Point) => number {
   }
 }
 
+function distanceComparePoints(p: Point): (a: Point, b: Point) => number {
+  return (a: Point, b: Point) => {
+    const distA = euclideanDistance(p, a)
+    const distB = euclideanDistance(p, b)
+
+    if(distA < distB) {
+      return -1
+    } else if (distA > distB) {
+      return 1
+    } else {
+      return 0
+    }
+  }
+}
+
 function encodePoints (points: Point[]): string {
   let str = ""
   points.sort(lexComparePoints).forEach((p) => {
@@ -274,13 +289,49 @@ function convexHullTSPLength(points: Point[]): Point[] {
   return path
 }
 
+// n^2 logn
+function nearestNeighborTSPLength(points: Point[]): number {
+  console.log(points.length)
 
-function loadMap(path: string): Point[] {
+
+  let tourLength: number = 0
+  const cities: boolean[] = points.map(() => { return true } )
+  let currentCity: Point = points[0]
+  cities[0] = false
+
+  let steps = 0
+
+  while(cities.some( (unvisited) => { return unvisited }) ) {
+    const sortedCities = points
+      .filter( (_, i) => { return cities[i] }) // city hasn't been visited yet
+      .sort(distanceComparePoints(currentCity))
+
+    const nearest = sortedCities[0]
+    tourLength += euclideanDistance(currentCity, nearest)
+    currentCity = nearest
+    cities[points.indexOf(nearest)] = false
+    steps ++
+    if(steps % 100 == 0) {
+      console.log(tourLength, currentCity)
+    }
+  }
+
+  const finalLeg = euclideanDistance(currentCity, points[0])
+  tourLength += finalLeg
+
+  return tourLength
+}
+
+
+function loadMap( path: string, cleanLine?: (line: string) => string): Point[] {
   const rawLines = fs.readFileSync(path).toString().split("\n")
   const count = rawLines.shift()
   rawLines.pop() // remove the trailing newline
 
   const points = rawLines.map((line) => {
+    if(cleanLine !== undefined) {
+      line = cleanLine(line)
+    }
     const nums = line.split(" ")
     return {
       x: Number.parseFloat(nums[0]),
@@ -295,6 +346,14 @@ const points = loadMap("data/tsp.txt")
 console.log(points)
 
 console.log(grahamScan(points))
-//console.log(convexHullTSPLength(points))
+console.log(perimeter(convexHullTSPLength(points)))
 
+const giantPoints = loadMap("data/tsp_big.txt", (line) => {
+  const dropPoint = line.indexOf(" ")
+  if(dropPoint <= 0) {
+    return line
+  }
+  return line.slice(dropPoint + 1)
+})
 
+console.log(nearestNeighborTSPLength(giantPoints))
