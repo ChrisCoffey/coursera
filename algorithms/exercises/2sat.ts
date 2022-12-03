@@ -159,7 +159,7 @@ function calculateNumVars(lines: string[]): number {
   return largestVarNum
 }
 
-const files = [
+const testFiles = [
   "data/2sat.test1",
   "data/2sat.test_2",
   "data/2sat.test3",
@@ -167,6 +167,15 @@ const files = [
   "data/2sat.test5"
 ]
 //const files = ["data/2sat.test3"]
+
+const files = [
+  "data/2sat1.txt",
+  "data/2sat2.txt",
+  "data/2sat3.txt",
+  "data/2sat4.txt",
+  "data/2sat5.txt",
+  "data/2sat6.txt",
+]
 
 files.forEach((f) => {
   const graph = parseSATFile(f)
