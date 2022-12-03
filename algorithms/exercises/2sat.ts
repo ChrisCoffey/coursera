@@ -41,29 +41,29 @@ class SATGraph {
     return this.graphT[v]
   }
 
-  public addEdges(startVar: number, endVar: number): void {
-    this.graph[this.notV(startVar)].push( this.varIndex(endVar) )
-    this.graph[this.notV(endVar)].push( this.varIndex(startVar) )
+  public addEdges(a: number, negateA: number, b: number, negateB: number): void {
+    const ia = 2 * a ^ negateA
+    const ib = 2 * b ^ negateB
+    const negA = ia ^ 1
+    const negB = ib ^ 1
+    //initialize the edges if they haven't been yet
+    if(this.graph[negA] === undefined ) { this.graph[negA] = [] }
+    if(this.graph[negB] === undefined ) { this.graph[negB] = [] }
+    if(this.graphT[ia] === undefined ) { this.graphT[ia] = [] }
+    if(this.graphT[ib] === undefined ) { this.graphT[ib] = [] }
 
-    // Assign the transpose
-    this.graphT[this.varIndex(startVar)].push( this.notV(endVar) )
-    this.graph[this.varIndex(endVar)].push( this.notV(startVar) )
-  }
-
-  // Being > 0 means v is true
-  private notV(v: number): number {
-    return v > 0 ? (this.varIndex(v) + this.numVariables) : (this.varIndex(v) - this.numVariables)
-  }
-
-  private varIndex(v: number): number {
-    return v > 0 ? v : (Math.abs(v) + this.n)
+    this.graph[negA].push(ib)
+    this.graph[negB].push(ia)
+    this.graphT[ib].push(negA)
+    this.graphT[ia].push(negB)
   }
 }
 
-function isSatisfiable(graph: SATGraph): boolean {
+function isSatisfiable(graph: SATGraph): [boolean, boolean[]] {
   const seen: boolean[] = []
   const components: number[] = []
   const stack: number[] = []
+  const assignment: boolean[] = []
 
   for(let i = 0; i< graph.size(); i++) {
     seen[i] = false
@@ -74,6 +74,7 @@ function isSatisfiable(graph: SATGraph): boolean {
   // as they're seen
   function firstPass(v: number): void {
     seen[v] = true
+    //console.log(v, graph, seen, stack)
     graph.edgesFrom(v).forEach((e) => {
       if(!seen[e]) {
         firstPass(e)
@@ -101,24 +102,37 @@ function isSatisfiable(graph: SATGraph): boolean {
   let componentNumber = 0
   for(let i=0; i < graph.size(); i++) {
     let vertex = stack.pop()
+    if (vertex === undefined) {
+      console.log("ERROR, stack prematurely empty")
+      return [false, []]
+    }
     // If this vertex hasn't been assigned a component, assign one
     if(components[vertex] == -1) {
       secondPass(vertex, componentNumber++)
     }
   }
 
+  //TODO calcualte assignments
+  for(let i=0; i< graph.numVars(); i += 2) {
+    if(components[i] == components[i+1]) {
+      return [false, []]
+    }
+    assignment[Math.floor(i / 2)] = components[i] > components[i+1]
+  }
 
-  return false
+  return [true, assignment]
 }
-
 
 
 function parseSATFile(file: fs.PathLike): SATGraph {
   const rawLines: string[] = fs.readFileSync(file).toString().split("\n")
   const numLines = parseInt(rawLines.shift() || "100000")
+  rawLines.pop()
+  const numVariables = calculateNumVars(rawLines)
 
   // Initialize the graph
-  const graph: SATGraph = new SATGraph(numLines)
+  const graph: SATGraph = new SATGraph(numVariables)
+
 
   rawLines.forEach((line) => {
     parseClause(graph, line)
@@ -129,8 +143,33 @@ function parseSATFile(file: fs.PathLike): SATGraph {
 
 // These functions are somewhat messy. Consider creating a class for them
 function parseClause(graph: SATGraph, rawClause: string): void {
-  const [a, b] = rawClause.split(" ").map(parseInt)
-  graph.addEdges(a, b)
+  const [a, b] = rawClause.split(" ").map( (x) => parseInt(x))
+  const negateA = a < 0 ? 1 : 0
+  const negateB = b < 0 ? 1 : 0
+  graph.addEdges(Math.abs(a), negateA, Math.abs(b), negateB)
 }
 
+function calculateNumVars(lines: string[]): number {
+  let largestVarNum = -1
+  lines.forEach((l) => {
+    const [a, b] = l.split(" ").map( (x) => parseInt(x) )
+    largestVarNum = Math.max(largestVarNum, Math.abs(a), Math.abs(b))
+  })
 
+  return largestVarNum
+}
+
+const files = [
+  "data/2sat.test1",
+  "data/2sat.test_2",
+  "data/2sat.test3",
+  "data/2sat.test4",
+  "data/2sat.test5"
+]
+//const files = ["data/2sat.test3"]
+
+files.forEach((f) => {
+  const graph = parseSATFile(f)
+  const satisfied = isSatisfiable(graph)[0]
+  console.log(f, satisfied)
+})
